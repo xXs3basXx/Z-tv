@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
@@ -26,8 +26,9 @@ jobs:
         run: flutter build windows --release
 
       - name: Comprimir el ejecutable
+        shell: pwsh
         run: |
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath LolPlusTV-Windows.zip
+          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "LolPlusTV-Windows.zip" -Force
 
       - name: Subir el archivo
         uses: actions/upload-artifact@v4
