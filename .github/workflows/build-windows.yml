@@ -1,0 +1,37 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:          # Permite ejecutarlo manualmente
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Instalar dependencias
+        run: flutter pub get
+
+      - name: Compilar para Windows (Release)
+        run: flutter build windows --release
+
+      - name: Comprimir el ejecutable
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath LolPlusTV-Windows.zip
+
+      - name: Subir el archivo
+        uses: actions/upload-artifact@v4
+        with:
+          name: LolPlusTV-Windows
+          path: LolPlusTV-Windows.zip
+          retention-days: 30
