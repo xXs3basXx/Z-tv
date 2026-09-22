@@ -1,38 +1,48 @@
 name: Build Windows
 
 on:
-  workflow_dispatch:          # Permite ejecutarlo manualmente
+  workflow_dispatch:
   push:
     branches: [ main ]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022          # Más estable que windows-latest
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Configurar Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      - name: Instalar dependencias
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Get dependencies
         run: flutter pub get
 
-      - name: Compilar para Windows (Release)
-        run: flutter build windows --release
-
-      - name: Comprimir el ejecutable
+      - name: Build Windows Release
         shell: pwsh
         run: |
-          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "LolPlusTV-Windows.zip" -Force
+          $env:CXXFLAGS = "/D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS"
+          flutter build windows --release
 
-      - name: Subir el archivo
+      - name: Compress
+        shell: pwsh
+        run: |
+          $releasePath = "build\windows\x64\runner\Release"
+          if (-not (Test-Path $releasePath)) {
+            $releasePath = "build\windows\runner\Release"
+          }
+          Compress-Archive -Path "$releasePath\*" -DestinationPath "LolPlusTV-Windows.zip" -Force
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: LolPlusTV-Windows
           path: LolPlusTV-Windows.zip
-          retention-days: 30
+          retention-days: 15
